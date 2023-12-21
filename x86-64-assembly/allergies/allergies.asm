@@ -1,17 +1,13 @@
-default rel
-
-section .rodata
-allergies: db 1, 2, 4, 8, 16, 32, 64, 128
-
 section .text
 global allergic_to
 allergic_to:
     ; rdi, rsi -> rax
     ; init
     xor rax, rax
+    mov rcx, rdi ; shl only supports 1, CL, and imm8
     ; find allergy code
-    lea rdx, [allergies]
-    movzx edx, byte [rdx+rdi]
+    mov rdx, 1
+    shl rdx, cl
     ; do we have this allergy?
     test rdx, rsi
     setnz al
@@ -23,18 +19,14 @@ list:
     ; init
     xor eax, eax
     xor ecx, ecx
-    mov rdx, 1
 .loop:
-    cmp rdx, 1 << 8
+    cmp rcx, 8
     je .done
-    test rdi, rdx
-    jnz .save
-    jmp .shift
-.save:
+    shr rdi, 1
+    jnc .skip
     mov [rsi+4+4*rax], ecx
     inc eax
-.shift:
-    shl rdx, 1
+.skip:
     inc ecx
     jmp .loop
 .done:
